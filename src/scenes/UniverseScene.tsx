@@ -4,11 +4,17 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { useDevicePerformance } from "@/hooks/useDevicePerformance";
 import Starfield from "./Starfield";
 import LightTrail from "./LightTrail";
+import Constellation from "./Constellation";
+
+interface UniverseSceneProps {
+  morphing: boolean;
+  onMorphComplete?: () => void;
+}
 
 /**
- * Main 3D canvas scene: starfield + light trail + bloom.
+ * Main 3D canvas scene: starfield + constellation + light trail + bloom.
  */
-export default function UniverseScene() {
+export default function UniverseScene({ morphing, onMorphComplete }: UniverseSceneProps) {
   const { bloomIntensity, dpr } = useDevicePerformance();
 
   return (
@@ -21,11 +27,12 @@ export default function UniverseScene() {
       <color attach="background" args={["#0a0e1a"]} />
       <Suspense fallback={null}>
         <Starfield />
+        <Constellation morphing={morphing} onMorphComplete={onMorphComplete} />
         <LightTrail />
         <EffectComposer>
           <Bloom
             intensity={bloomIntensity}
-            luminanceThreshold={0.2}
+            luminanceThreshold={0.15}
             luminanceSmoothing={0.9}
             mipmapBlur
           />
