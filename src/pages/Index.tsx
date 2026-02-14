@@ -3,12 +3,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import CinematicIntro from "@/components/CinematicIntro";
 import LoveLetter from "@/components/LoveLetter";
 import TimeCapsule from "@/components/TimeCapsule";
+import VoiceMessage from "@/components/VoiceMessage";
+import EndingScene from "@/components/EndingScene";
 import EasterEgg from "@/components/EasterEgg";
 import { useAmbientAudio } from "@/hooks/useAmbientAudio";
 
 const UniverseScene = lazy(() => import("@/scenes/UniverseScene"));
 
-type Section = "none" | "memories" | "letter" | "capsule";
+type Section = "none" | "memories" | "letter" | "capsule" | "voice" | "ending";
 
 const Index = () => {
   const [entered, setEntered] = useState(false);
@@ -94,16 +96,25 @@ const Index = () => {
               Every star led me to you, <EasterEgg />.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              {(["memories", "letter", "capsule"] as Section[]).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setSection(s)}
-                  className="border px-6 py-2 text-xs uppercase tracking-[0.25em] transition-all duration-500 hover:tracking-[0.4em]"
-                  style={btnStyle}
-                >
-                  {s === "memories" ? "Our Memories" : s === "letter" ? "A Letter" : "Time Capsule"}
-                </button>
-              ))}
+              {(["memories", "letter", "capsule", "voice", "ending"] as Section[]).map((s) => {
+                const labels: Record<string, string> = {
+                  memories: "Our Memories",
+                  letter: "A Letter",
+                  capsule: "Time Capsule",
+                  voice: "A Voice",
+                  ending: "The End",
+                };
+                return (
+                  <button
+                    key={s}
+                    onClick={() => setSection(s)}
+                    className="border px-6 py-2 text-xs uppercase tracking-[0.25em] transition-all duration-500 hover:tracking-[0.4em]"
+                    style={btnStyle}
+                  >
+                    {labels[s]}
+                  </button>
+                );
+              })}
             </div>
           </motion.div>
         )}
@@ -129,6 +140,8 @@ const Index = () => {
       {/* Sections */}
       <LoveLetter visible={section === "letter"} />
       <TimeCapsule visible={section === "capsule"} />
+      <VoiceMessage visible={section === "voice"} />
+      <EndingScene visible={section === "ending"} />
     </div>
   );
 };
