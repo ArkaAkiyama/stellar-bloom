@@ -10,13 +10,15 @@ import MemoriesGallery from "./MemoriesGallery";
 interface UniverseSceneProps {
   morphing: boolean;
   showMemories: boolean;
+  textReveal: boolean;
   onMorphComplete?: () => void;
+  onTextRevealComplete?: () => void;
 }
 
 /**
  * Main 3D canvas scene with all sub-scenes and post-processing.
  */
-export default function UniverseScene({ morphing, showMemories, onMorphComplete }: UniverseSceneProps) {
+export default function UniverseScene({ morphing, showMemories, textReveal, onMorphComplete, onTextRevealComplete }: UniverseSceneProps) {
   const { bloomIntensity, dpr } = useDevicePerformance();
 
   return (
@@ -29,7 +31,7 @@ export default function UniverseScene({ morphing, showMemories, onMorphComplete 
       <color attach="background" args={["#0a0e1a"]} />
       <Suspense fallback={null}>
         <Starfield />
-        <Constellation morphing={morphing} onMorphComplete={onMorphComplete} />
+        <Constellation morphing={morphing} textReveal={textReveal} onMorphComplete={onMorphComplete} onTextRevealComplete={onTextRevealComplete} />
         <MemoriesGallery visible={showMemories} />
         <LightTrail />
         <EffectComposer>
