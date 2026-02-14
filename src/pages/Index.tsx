@@ -134,7 +134,7 @@ const Index = () => {
 
       {/* Back button when in a section (not during message reveal) */}
       <AnimatePresence>
-        {section !== "none" && section !== "message" && (
+        {section !== "none" && (
           <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

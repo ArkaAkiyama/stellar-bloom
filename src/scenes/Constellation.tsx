@@ -82,10 +82,16 @@ export default function Constellation({
     if (!textReveal || phase !== "heart") return;
 
     setPhase("text");
+
+    // Pre-compute per-particle random offsets for scatter (NOT per-frame random)
+    const scatterOffsets = new Float32Array(count * 3);
+    for (let i = 0; i < count * 3; i++) {
+      scatterOffsets[i] = (Math.random() - 0.5);
+    }
+
     const proxy = { t: 0 };
     const tl = gsap.timeline({
       onComplete: () => {
-        // Hold for 3.5 seconds, then signal completion
         gsap.delayedCall(3.5, () => {
           setPhase("done");
           onTextRevealComplete?.();
@@ -94,18 +100,17 @@ export default function Constellation({
     });
     tlRef.current = tl;
 
-    // Dissolve heart: briefly scatter, then reform as text
     tl.to(proxy, {
       t: 1, duration: 4, ease: "power2.inOut",
       onUpdate: () => {
         const t = proxy.t;
-        // Eased dissolve-to-text: slight scatter in first half, converge in second
-        const scatter = Math.sin(t * Math.PI) * 0.4; // peaks at t=0.5
+        // Scatter peaks at midpoint then converges to text
+        const scatter = Math.sin(t * Math.PI) * 0.5;
         for (let i = 0; i < count * 3; i++) {
           const fromHeart = heart[i];
           const toText = text[i];
           const base = fromHeart + (toText - fromHeart) * t;
-          currentPositions[i] = base + (Math.random() - 0.5) * scatter;
+          currentPositions[i] = base + scatterOffsets[i] * scatter;
         }
         if (pointsRef.current) {
           const attr = pointsRef.current.geometry.attributes.position as THREE.BufferAttribute;
@@ -134,10 +139,12 @@ export default function Constellation({
     const mat = pointsRef.current.material as THREE.PointsMaterial;
 
     if (phase === "text" || phase === "done") {
-      // Bright glow pulse during text
+      // Bright glow during text — stop rotation, pulse opacity
       glowRef.current += delta;
-      mat.opacity = 0.85 + 0.12 * Math.sin(glowRef.current * 1.2);
-      mat.size = 0.09 + 0.015 * Math.sin(glowRef.current * 0.8);
+      mat.opacity = 0.9 + 0.1 * Math.sin(glowRef.current * 1.2);
+      mat.size = 0.09 + 0.02 * Math.sin(glowRef.current * 0.8);
+      // Smoothly stop any rotation from heart phase
+      pointsRef.current.rotation.y *= 0.95;
     } else if (phase === "heart") {
       glowRef.current += delta;
       mat.opacity = 0.7 + 0.2 * Math.sin(glowRef.current * 1.5);
