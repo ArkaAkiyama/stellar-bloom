@@ -9,13 +9,13 @@ import { useAmbientAudio } from "@/hooks/useAmbientAudio";
 
 const UniverseScene = lazy(() => import("@/scenes/UniverseScene"));
 
-type Section = "none" | "memories" | "letter" | "capsule" | "message" | "ending";
+type Section = "none" | "memories" | "letter" | "capsule" | "orbital" | "ending";
 
 const Index = () => {
   const [entered, setEntered] = useState(false);
   const [morphing, setMorphing] = useState(false);
   const [morphComplete, setMorphComplete] = useState(false);
-  const [textReveal, setTextReveal] = useState(false);
+  const [orbitalReveal, setOrbitalReveal] = useState(false);
   const [section, setSection] = useState<Section>("none");
   const { play } = useAmbientAudio();
 
@@ -32,19 +32,17 @@ const Index = () => {
     setMorphComplete(true);
   }, []);
 
-  const handleMessageReveal = () => {
-    setSection("message");
-    setTextReveal(true);
+  const handleOrbitalReveal = () => {
+    setSection("orbital");
+    setOrbitalReveal(true);
   };
 
-  const handleTextRevealComplete = useCallback(() => {
-    // Auto-transition to ending after text hold
+  const handleOrbitalComplete = useCallback(() => {
     setSection("ending");
   }, []);
 
   const showMemories = section === "memories";
 
-  // Glass button style
   const btnStyle = {
     color: "hsl(270, 40%, 78%)",
     borderColor: "hsl(270, 20%, 28%)",
@@ -54,23 +52,20 @@ const Index = () => {
 
   return (
     <div className="relative min-h-screen overflow-hidden" style={{ background: "#0a0e1a" }}>
-      {/* 3D Scene */}
       <Suspense fallback={null}>
         <div style={{ opacity: entered ? 1 : 0, transition: "opacity 1.5s ease-in-out" }}>
           <UniverseScene
             morphing={morphing}
             showMemories={showMemories}
-            textReveal={textReveal}
+            orbitalReveal={orbitalReveal}
             onMorphComplete={handleMorphComplete}
-            onTextRevealComplete={handleTextRevealComplete}
+            onOrbitalComplete={handleOrbitalComplete}
           />
         </div>
       </Suspense>
 
-      {/* Intro */}
       {!entered && <CinematicIntro onEnter={handleEnter} />}
 
-      {/* "See Us" button */}
       <AnimatePresence>
         {entered && !morphing && (
           <motion.div
@@ -91,7 +86,6 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Post-morph navigation */}
       <AnimatePresence>
         {morphComplete && section === "none" && (
           <motion.div
@@ -108,18 +102,18 @@ const Index = () => {
               Every star led me to you, <EasterEgg />.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              {(["memories", "letter", "capsule", "message", "ending"] as Section[]).map((s) => {
+              {(["memories", "letter", "capsule", "orbital", "ending"] as Section[]).map((s) => {
                 const labels: Record<string, string> = {
                   memories: "Our Memories",
                   letter: "A Letter",
                   capsule: "Time Capsule",
-                  message: "A Message",
+                  orbital: "2 Years",
                   ending: "The End",
                 };
                 return (
                   <button
                     key={s}
-                    onClick={() => s === "message" ? handleMessageReveal() : setSection(s)}
+                    onClick={() => s === "orbital" ? handleOrbitalReveal() : setSection(s)}
                     className="border px-6 py-2 text-xs uppercase tracking-[0.25em] transition-all duration-500 hover:tracking-[0.4em]"
                     style={btnStyle}
                   >
@@ -132,9 +126,8 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Back button when in a section (not during message reveal) */}
       <AnimatePresence>
-        {section !== "none" && (
+        {section !== "none" && section !== "orbital" && (
           <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -149,7 +142,6 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Sections */}
       <LoveLetter visible={section === "letter"} />
       <TimeCapsule visible={section === "capsule"} />
       <EndingScene visible={section === "ending"} />
