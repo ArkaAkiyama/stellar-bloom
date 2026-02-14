@@ -42,8 +42,7 @@ export const content = {
     { src: "/placeholder.svg", caption: "Where we belong" },
   ],
 
-  // — Constellation Message Reveal —
-  constellationMessage: "You are my home",
+  // — Ending —
 
   // — Ending —
   ending: {

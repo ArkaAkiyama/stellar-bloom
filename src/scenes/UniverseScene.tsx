@@ -1,4 +1,4 @@
-import { Suspense, useState, useCallback } from "react";
+import { Suspense } from "react";
 import { Canvas } from "@react-three/fiber";
 import { EffectComposer, Bloom, DepthOfField } from "@react-three/postprocessing";
 import { useDevicePerformance } from "@/hooks/useDevicePerformance";
@@ -10,16 +10,25 @@ import MemoriesGallery from "./MemoriesGallery";
 interface UniverseSceneProps {
   morphing: boolean;
   showMemories: boolean;
-  textReveal: boolean;
+  orbitalReveal: boolean;
   onMorphComplete?: () => void;
-  onTextRevealComplete?: () => void;
+  onOrbitalComplete?: () => void;
 }
 
 /**
  * Main 3D canvas scene with all sub-scenes and post-processing.
  */
-export default function UniverseScene({ morphing, showMemories, textReveal, onMorphComplete, onTextRevealComplete }: UniverseSceneProps) {
+export default function UniverseScene({
+  morphing,
+  showMemories,
+  orbitalReveal,
+  onMorphComplete,
+  onOrbitalComplete,
+}: UniverseSceneProps) {
   const { bloomIntensity, dpr } = useDevicePerformance();
+
+  // Boost bloom during orbital phase
+  const activeBloom = orbitalReveal ? bloomIntensity * 1.6 : bloomIntensity;
 
   return (
     <Canvas
@@ -31,13 +40,18 @@ export default function UniverseScene({ morphing, showMemories, textReveal, onMo
       <color attach="background" args={["#0a0e1a"]} />
       <Suspense fallback={null}>
         <Starfield />
-        <Constellation morphing={morphing} textReveal={textReveal} onMorphComplete={onMorphComplete} onTextRevealComplete={onTextRevealComplete} />
+        <Constellation
+          morphing={morphing}
+          orbitalReveal={orbitalReveal}
+          onMorphComplete={onMorphComplete}
+          onOrbitalComplete={onOrbitalComplete}
+        />
         <MemoriesGallery visible={showMemories} />
         <LightTrail />
         <EffectComposer>
           <Bloom
-            intensity={bloomIntensity}
-            luminanceThreshold={0.15}
+            intensity={activeBloom}
+            luminanceThreshold={0.12}
             luminanceSmoothing={0.9}
             mipmapBlur
           />
