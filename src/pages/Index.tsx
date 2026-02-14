@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CinematicIntro from "@/components/CinematicIntro";
 import LoveLetter from "@/components/LoveLetter";
@@ -6,10 +6,19 @@ import TimeCapsule from "@/components/TimeCapsule";
 import EndingScene from "@/components/EndingScene";
 import EasterEgg from "@/components/EasterEgg";
 import { useAmbientAudio } from "@/hooks/useAmbientAudio";
+import { lazy, Suspense } from "react";
 
 const UniverseScene = lazy(() => import("@/scenes/UniverseScene"));
 
+/**
+ * Phases flow:
+ * intro → starfield → heart → nav (user picks) → memories | letter | capsule | orbital → ending
+ * Navigation is always manual via Next/Back buttons. No auto-transitions.
+ */
+
 type Section = "none" | "memories" | "letter" | "capsule" | "orbital" | "ending";
+
+const phases: Section[] = ["memories", "letter", "capsule", "orbital", "ending"];
 
 const navItems: { key: Section; label: string; icon: string }[] = [
   { key: "memories", label: "Our Memories", icon: "✦" },
@@ -24,6 +33,7 @@ const Index = () => {
   const [morphing, setMorphing] = useState(false);
   const [morphComplete, setMorphComplete] = useState(false);
   const [orbitalReveal, setOrbitalReveal] = useState(false);
+  const [orbitalDone, setOrbitalDone] = useState(false);
   const [section, setSection] = useState<Section>("none");
   const { play } = useAmbientAudio();
 
@@ -50,10 +60,36 @@ const Index = () => {
   };
 
   const handleOrbitalComplete = useCallback(() => {
-    setSection("ending");
+    setOrbitalDone(true);
   }, []);
 
+  // Navigation helpers
+  const currentIndex = phases.indexOf(section);
+  const canGoNext = currentIndex >= 0 && currentIndex < phases.length - 1;
+  const canGoBack = section !== "none";
+
+  const goNext = () => {
+    if (!canGoNext) return;
+    const next = phases[currentIndex + 1];
+    handleNavClick(next);
+  };
+
+  const goBack = () => {
+    if (section === "none") return;
+    // If on first phase or in nav, go back to nav
+    if (currentIndex <= 0) {
+      setSection("none");
+    } else {
+      const prev = phases[currentIndex - 1];
+      handleNavClick(prev);
+    }
+  };
+
   const showMemories = section === "memories";
+
+  // For orbital: only show Next once the seal sequence completes
+  const showNextBtn = section !== "none" && section !== "ending" &&
+    (section !== "orbital" || orbitalDone);
 
   return (
     <div className="relative min-h-screen overflow-hidden" style={{ background: "hsl(230, 50%, 5%)" }}>
@@ -96,7 +132,7 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Post-morph navigation */}
+      {/* Post-morph navigation hub */}
       <AnimatePresence>
         {morphComplete && section === "none" && (
           <motion.div
@@ -146,18 +182,35 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Back button */}
+      {/* Back / Next navigation */}
       <AnimatePresence>
-        {section !== "none" && section !== "orbital" && (
+        {canGoBack && section !== "ending" && (
           <motion.button
+            key="back"
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -10 }}
             transition={{ duration: 0.4 }}
-            onClick={() => setSection("none")}
+            onClick={goBack}
             className="cosmos-btn fixed left-6 top-6 z-30 border px-5 py-2.5 text-xs uppercase tracking-[0.2em] rounded-full"
           >
             ← Back
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showNextBtn && (
+          <motion.button
+            key="next"
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 10 }}
+            transition={{ duration: 0.4 }}
+            onClick={goNext}
+            className="cosmos-btn fixed right-6 top-6 z-30 border px-5 py-2.5 text-xs uppercase tracking-[0.2em] rounded-full"
+          >
+            Next →
           </motion.button>
         )}
       </AnimatePresence>
