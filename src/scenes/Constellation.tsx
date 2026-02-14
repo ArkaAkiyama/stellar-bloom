@@ -29,7 +29,11 @@ export default function Constellation({
   const { camera, pointer } = useThree();
   const tlRef = useRef<gsap.core.Timeline | null>(null);
   const [phase, setPhase] = useState<"idle" | "heart" | "text" | "done">("idle");
+  const phaseRef = useRef(phase);
   const glowRef = useRef(0);
+
+  // Keep ref in sync with state
+  useEffect(() => { phaseRef.current = phase; }, [phase]);
 
   const count = Math.min(particleCount, 2000);
 
@@ -77,13 +81,14 @@ export default function Constellation({
     return () => { tl.kill(); };
   }, [morphing, phase, camera, scattered, heart, currentPositions, count, onMorphComplete]);
 
-  // Phase 2: Heart → Text
+  // Phase 2: Heart → Text (use ref to avoid cleanup killing active timeline)
+  const textRevealStarted = useRef(false);
   useEffect(() => {
-    if (!textReveal || phase !== "heart") return;
-
+    if (!textReveal || textRevealStarted.current || phaseRef.current !== "heart") return;
+    textRevealStarted.current = true;
     setPhase("text");
 
-    // Pre-compute per-particle random offsets for scatter (NOT per-frame random)
+    // Pre-compute per-particle random offsets for scatter
     const scatterOffsets = new Float32Array(count * 3);
     for (let i = 0; i < count * 3; i++) {
       scatterOffsets[i] = (Math.random() - 0.5);
@@ -104,7 +109,6 @@ export default function Constellation({
       t: 1, duration: 4, ease: "power2.inOut",
       onUpdate: () => {
         const t = proxy.t;
-        // Scatter peaks at midpoint then converges to text
         const scatter = Math.sin(t * Math.PI) * 0.5;
         for (let i = 0; i < count * 3; i++) {
           const fromHeart = heart[i];
@@ -120,13 +124,10 @@ export default function Constellation({
       },
     }, 0);
 
-    // Camera: center and zoom in gently
     tl.to(camera.position, {
       x: 0, y: 0.2, z: 6, duration: 3, ease: "power2.inOut",
     }, 0);
-
-    return () => { tl.kill(); };
-  }, [textReveal, phase, camera, heart, text, currentPositions, count, onTextRevealComplete]);
+  }, [textReveal, camera, heart, text, currentPositions, count, onTextRevealComplete]);
 
   // Cleanup
   useEffect(() => {
