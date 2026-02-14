@@ -3,19 +3,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import CinematicIntro from "@/components/CinematicIntro";
 import LoveLetter from "@/components/LoveLetter";
 import TimeCapsule from "@/components/TimeCapsule";
-import VoiceMessage from "@/components/VoiceMessage";
 import EndingScene from "@/components/EndingScene";
 import EasterEgg from "@/components/EasterEgg";
 import { useAmbientAudio } from "@/hooks/useAmbientAudio";
 
 const UniverseScene = lazy(() => import("@/scenes/UniverseScene"));
 
-type Section = "none" | "memories" | "letter" | "capsule" | "voice" | "ending";
+type Section = "none" | "memories" | "letter" | "capsule" | "message" | "ending";
 
 const Index = () => {
   const [entered, setEntered] = useState(false);
   const [morphing, setMorphing] = useState(false);
   const [morphComplete, setMorphComplete] = useState(false);
+  const [textReveal, setTextReveal] = useState(false);
   const [section, setSection] = useState<Section>("none");
   const { play } = useAmbientAudio();
 
@@ -30,6 +30,16 @@ const Index = () => {
 
   const handleMorphComplete = useCallback(() => {
     setMorphComplete(true);
+  }, []);
+
+  const handleMessageReveal = () => {
+    setSection("message");
+    setTextReveal(true);
+  };
+
+  const handleTextRevealComplete = useCallback(() => {
+    // Auto-transition to ending after text hold
+    setSection("ending");
   }, []);
 
   const showMemories = section === "memories";
@@ -50,7 +60,9 @@ const Index = () => {
           <UniverseScene
             morphing={morphing}
             showMemories={showMemories}
+            textReveal={textReveal}
             onMorphComplete={handleMorphComplete}
+            onTextRevealComplete={handleTextRevealComplete}
           />
         </div>
       </Suspense>
@@ -96,18 +108,18 @@ const Index = () => {
               Every star led me to you, <EasterEgg />.
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              {(["memories", "letter", "capsule", "voice", "ending"] as Section[]).map((s) => {
+              {(["memories", "letter", "capsule", "message", "ending"] as Section[]).map((s) => {
                 const labels: Record<string, string> = {
                   memories: "Our Memories",
                   letter: "A Letter",
                   capsule: "Time Capsule",
-                  voice: "A Voice",
+                  message: "A Message",
                   ending: "The End",
                 };
                 return (
                   <button
                     key={s}
-                    onClick={() => setSection(s)}
+                    onClick={() => s === "message" ? handleMessageReveal() : setSection(s)}
                     className="border px-6 py-2 text-xs uppercase tracking-[0.25em] transition-all duration-500 hover:tracking-[0.4em]"
                     style={btnStyle}
                   >
@@ -120,9 +132,9 @@ const Index = () => {
         )}
       </AnimatePresence>
 
-      {/* Back button when in a section */}
+      {/* Back button when in a section (not during message reveal) */}
       <AnimatePresence>
-        {section !== "none" && (
+        {section !== "none" && section !== "message" && (
           <motion.button
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -140,7 +152,6 @@ const Index = () => {
       {/* Sections */}
       <LoveLetter visible={section === "letter"} />
       <TimeCapsule visible={section === "capsule"} />
-      <VoiceMessage visible={section === "voice"} />
       <EndingScene visible={section === "ending"} />
     </div>
   );
