@@ -42,7 +42,11 @@ export const content = {
     { src: "/placeholder.svg", caption: "Where we belong" },
   ],
 
-  // — Ending —
+  // — Orbital / Promise Seal —
+  orbital: {
+    line1: "2 Years Since I Chose You",
+    line2: "Still Choosing You.",
+  },
 
   // — Ending —
   ending: {
