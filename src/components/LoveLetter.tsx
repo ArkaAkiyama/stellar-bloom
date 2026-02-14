@@ -7,9 +7,6 @@ interface LoveLetterProps {
   onComplete?: () => void;
 }
 
-/**
- * Glassmorphism love letter panel with typewriter text animation.
- */
 export default function LoveLetter({ visible, onComplete }: LoveLetterProps) {
   const [currentParagraph, setCurrentParagraph] = useState(0);
   const [displayedText, setDisplayedText] = useState("");
@@ -18,7 +15,6 @@ export default function LoveLetter({ visible, onComplete }: LoveLetterProps) {
 
   const paragraphs = content.loveLetter.paragraphs;
 
-  // Start typing when visible
   useEffect(() => {
     if (visible && !started) {
       const t = setTimeout(() => setStarted(true), 600);
@@ -26,7 +22,6 @@ export default function LoveLetter({ visible, onComplete }: LoveLetterProps) {
     }
   }, [visible, started]);
 
-  // Typewriter effect
   useEffect(() => {
     if (!started || currentParagraph >= paragraphs.length) {
       if (currentParagraph >= paragraphs.length) onComplete?.();
@@ -39,7 +34,6 @@ export default function LoveLetter({ visible, onComplete }: LoveLetterProps) {
         setDisplayedText(full.slice(0, displayedText.length + 1));
       }, 45);
     } else {
-      // Pause then move to next paragraph
       timeoutRef.current = setTimeout(() => {
         setCurrentParagraph((p) => p + 1);
         setDisplayedText("");
@@ -60,38 +54,38 @@ export default function LoveLetter({ visible, onComplete }: LoveLetterProps) {
       transition={{ duration: 1.2, ease: "easeOut" }}
       className="fixed inset-0 z-20 flex items-center justify-center px-6"
     >
-      <div
-        className="max-w-lg w-full rounded-2xl border p-8 md:p-12"
-        style={{
-          background: "hsla(250, 30%, 8%, 0.6)",
-          borderColor: "hsla(270, 20%, 30%, 0.4)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-        }}
-      >
-        {/* Completed paragraphs */}
+      <div className="glass-panel max-w-lg w-full rounded-2xl border p-8 md:p-12">
+        {/* Header decoration */}
+        <div className="flex justify-center mb-8">
+          <div
+            className="h-px w-16 shimmer-line"
+            style={{ background: "hsl(var(--cosmos-glow) / 0.3)" }}
+          />
+        </div>
+
         {paragraphs.slice(0, currentParagraph).map((p, i) => (
-          <p
+          <motion.p
             key={i}
-            className="mb-4 font-serif text-base leading-relaxed md:text-lg"
-            style={{ color: "hsl(270, 25%, 75%)" }}
+            initial={{ opacity: 0.5 }}
+            animate={{ opacity: 1 }}
+            className="mb-5 text-base leading-[1.9] md:text-lg"
+            style={{ color: "hsl(var(--cosmos-text))" }}
           >
             {p}
-          </p>
+          </motion.p>
         ))}
 
-        {/* Currently typing paragraph */}
         {currentParagraph < paragraphs.length && (
           <p
-            className="mb-4 font-serif text-base leading-relaxed md:text-lg"
-            style={{ color: "hsl(270, 25%, 75%)" }}
+            className="mb-5 text-base leading-[1.9] md:text-lg"
+            style={{ color: "hsl(var(--cosmos-text))" }}
           >
             {displayedText}
             <span
               className="inline-block w-0.5 ml-0.5 animate-pulse"
               style={{
                 height: "1.1em",
-                background: "hsl(270, 40%, 65%)",
+                background: "hsl(var(--cosmos-glow))",
                 verticalAlign: "text-bottom",
               }}
             />

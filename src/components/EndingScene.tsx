@@ -16,19 +16,16 @@ interface Petal {
   rotation: number;
   swayAmount: number;
   opacity: number;
+  hue: number;
 }
 
-/**
- * Ending scene: falling petal particles → fade to black → signature text.
- */
 export default function EndingScene({ visible, onFadeComplete }: EndingSceneProps) {
   const [phase, setPhase] = useState<"petals" | "fade" | "text">("petals");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Generate petals
   const petals: Petal[] = useMemo(
     () =>
-      Array.from({ length: 40 }, (_, i) => ({
+      Array.from({ length: 50 }, (_, i) => ({
         id: i,
         x: Math.random() * 100,
         delay: Math.random() * 4,
@@ -36,7 +33,8 @@ export default function EndingScene({ visible, onFadeComplete }: EndingSceneProp
         size: 6 + Math.random() * 10,
         rotation: Math.random() * 360,
         swayAmount: 30 + Math.random() * 60,
-        opacity: 0.3 + Math.random() * 0.5,
+        opacity: 0.2 + Math.random() * 0.4,
+        hue: 260 + Math.random() * 30,
       })),
     []
   );
@@ -46,8 +44,6 @@ export default function EndingScene({ visible, onFadeComplete }: EndingSceneProp
       setPhase("petals");
       return;
     }
-
-    // Petals fall for 5s → fade to black → show text
     timerRef.current = setTimeout(() => setPhase("fade"), 5000);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -107,7 +103,7 @@ export default function EndingScene({ visible, onFadeComplete }: EndingSceneProp
                   width: p.size,
                   height: p.size * 1.4,
                   borderRadius: `${p.size}px ${p.size}px 0 ${p.size}px`,
-                  background: `hsl(${270 + Math.random() * 20}, 30%, ${55 + Math.random() * 15}%)`,
+                  background: `hsl(${p.hue}, 35%, 60%)`,
                   filter: "blur(0.5px)",
                 }}
               />
@@ -116,7 +112,7 @@ export default function EndingScene({ visible, onFadeComplete }: EndingSceneProp
         )}
       </AnimatePresence>
 
-      {/* Fade to black overlay */}
+      {/* Fade to black */}
       <AnimatePresence>
         {(phase === "fade" || phase === "text") && (
           <motion.div
@@ -124,7 +120,7 @@ export default function EndingScene({ visible, onFadeComplete }: EndingSceneProp
             animate={{ opacity: 1 }}
             transition={{ duration: 2.5, ease: "easeInOut" }}
             className="absolute inset-0 pointer-events-auto"
-            style={{ background: "#050509" }}
+            style={{ background: "hsl(230, 50%, 3%)" }}
           />
         )}
       </AnimatePresence>
@@ -138,12 +134,21 @@ export default function EndingScene({ visible, onFadeComplete }: EndingSceneProp
             transition={{ delay: 0.8, duration: 2 }}
             className="absolute inset-0 flex flex-col items-center justify-center gap-6 pointer-events-auto px-6"
           >
+            {/* Decorative line */}
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 1, duration: 1.5 }}
+              className="h-px w-20 origin-center"
+              style={{ background: "hsl(var(--cosmos-glow) / 0.3)" }}
+            />
+
             <motion.p
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.2, duration: 1.5, ease: "easeOut" }}
-              className="max-w-md text-center font-serif text-xl leading-relaxed tracking-wide md:text-2xl"
-              style={{ color: "hsl(270, 30%, 80%)" }}
+              className="max-w-md text-center text-xl leading-relaxed tracking-wide md:text-2xl"
+              style={{ color: "hsl(var(--cosmos-text))" }}
             >
               {content.ending.line}
             </motion.p>
@@ -152,20 +157,27 @@ export default function EndingScene({ visible, onFadeComplete }: EndingSceneProp
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 3, duration: 1.5 }}
-              className="font-serif text-sm italic tracking-wider"
-              style={{ color: "hsl(270, 15%, 50%)" }}
+              className="text-sm italic tracking-wider"
+              style={{ color: "hsl(var(--cosmos-text-dim))" }}
             >
               {content.ending.signature}
             </motion.p>
 
-            {/* Restart hint */}
+            {/* Decorative line */}
+            <motion.div
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ delay: 3.5, duration: 1.5 }}
+              className="h-px w-20 origin-center"
+              style={{ background: "hsl(var(--cosmos-glow) / 0.3)" }}
+            />
+
             <motion.button
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 5, duration: 1.5 }}
               onClick={() => window.location.reload()}
-              className="mt-8 text-xs uppercase tracking-[0.25em] transition-opacity hover:opacity-70 pointer-events-auto"
-              style={{ color: "hsl(270, 10%, 35%)" }}
+              className="cosmos-btn mt-8 border text-xs uppercase tracking-[0.25em] px-6 py-2.5 rounded-full pointer-events-auto"
             >
               From the beginning ↻
             </motion.button>
