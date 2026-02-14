@@ -1,20 +1,22 @@
-import { Suspense } from "react";
+import { Suspense, useState, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
-import { EffectComposer, Bloom } from "@react-three/postprocessing";
+import { EffectComposer, Bloom, DepthOfField } from "@react-three/postprocessing";
 import { useDevicePerformance } from "@/hooks/useDevicePerformance";
 import Starfield from "./Starfield";
 import LightTrail from "./LightTrail";
 import Constellation from "./Constellation";
+import MemoriesGallery from "./MemoriesGallery";
 
 interface UniverseSceneProps {
   morphing: boolean;
+  showMemories: boolean;
   onMorphComplete?: () => void;
 }
 
 /**
- * Main 3D canvas scene: starfield + constellation + light trail + bloom.
+ * Main 3D canvas scene with all sub-scenes and post-processing.
  */
-export default function UniverseScene({ morphing, onMorphComplete }: UniverseSceneProps) {
+export default function UniverseScene({ morphing, showMemories, onMorphComplete }: UniverseSceneProps) {
   const { bloomIntensity, dpr } = useDevicePerformance();
 
   return (
@@ -28,6 +30,7 @@ export default function UniverseScene({ morphing, onMorphComplete }: UniverseSce
       <Suspense fallback={null}>
         <Starfield />
         <Constellation morphing={morphing} onMorphComplete={onMorphComplete} />
+        <MemoriesGallery visible={showMemories} />
         <LightTrail />
         <EffectComposer>
           <Bloom
@@ -36,6 +39,13 @@ export default function UniverseScene({ morphing, onMorphComplete }: UniverseSce
             luminanceSmoothing={0.9}
             mipmapBlur
           />
+          {showMemories && (
+            <DepthOfField
+              focusDistance={0.02}
+              focalLength={0.05}
+              bokehScale={3}
+            />
+          )}
         </EffectComposer>
       </Suspense>
     </Canvas>
